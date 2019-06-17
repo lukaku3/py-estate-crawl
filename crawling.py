@@ -1,4 +1,4 @@
-import csv,os,re,unittest
+import csv,os,re,sys,time,unittest
 from selenium import webdriver
 from bs4 import BeautifulSoup
 
@@ -13,7 +13,6 @@ class Crawling(unittest.TestCase):
         self.driver = webdriver.Chrome(executable_path=os.path.abspath("chromedriver"))
 
     def test_get_city(self):
-
         for type in self.buy_type:
             for pref in self.pref_cd:
                 print( self.base_url.format(type,pref,'l') )
@@ -21,8 +20,6 @@ class Crawling(unittest.TestCase):
                 with open("./csvfiles/type-{}_pref-{}.csv".format(type,pref), 'w', newline='') as csvfile:
                     soup = BeautifulSoup(self.driver.page_source, "lxml")
                     css_soup = soup.select('table.area li')
-#                    handle = csv.writer(csvfile, delimiter=',',
-#                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
                     handle = csv.DictWriter(csvfile, ['id','title','count'])
                     handle.writeheader()
                     for li in css_soup:
@@ -39,10 +36,35 @@ class Crawling(unittest.TestCase):
                             row['count'] = m.group(0)
 #                        print(row)
                         handle.writerow(row)
+        self.driver.close()
 
-
-#                print(css_soup)
-#        self.driver.close()
+    def test_get_list(self):
+        for type in self.buy_type:
+            for pref in self.pref_cd:
+                print( self.base_url.format(type,pref,'l') )
+                self.driver.get( self.base_url.format(type,pref,'l') )
+#                with open("./csvfiles/type-{}_pref-{}.csv".format(type,pref), newline='') as csvfile:
+#                reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+#                time.sleep(3)
+#
+                #with open("./csvfiles/type-{}_pref-{}.csv".format(type,pref), newline='') as csvfile:
+                with open("./csvfiles/type-{}_pref-{}.csv".format(type,pref), 'r') as csvfile:
+                    reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                    header = next(reader)
+                    cnt=0
+                    for row in reader:
+                        list=row[0].split(',')
+                        print(list[0])
+                        if ( int(list[2]) > 0):
+                            self.driver.find_element_by_id(list[0]).click()
+                        if (cnt % 5 == 0):
+                            self.driver.find_element_by_css_selector('div.bottom-button.width-s > a').click()
+                        #    cnt=-1
+                        #time.sleep(5)
+                        if ( cnt == 6 ):
+                            sys.exit() 
+                        print(cnt)
+                        cnt=+1
 
     def test_main(self):
         self.driver.get("https://www.google.co.jp")
