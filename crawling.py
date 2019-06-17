@@ -16,23 +16,29 @@ class Crawling(unittest.TestCase):
 
         for type in self.buy_type:
             for pref in self.pref_cd:
-#                print( self.base_url % (type,pref,'l') )
-#                print( self.base_url.format(type,pref,'l') )
+                print( self.base_url.format(type,pref,'l') )
                 self.driver.get( self.base_url.format(type,pref,'l') )
                 with open("./csvfiles/type-{}_pref-{}.csv".format(type,pref), 'w', newline='') as csvfile:
                     soup = BeautifulSoup(self.driver.page_source, "lxml")
-                    #css_soup = soup.select('input[type="checkbox"]')
                     css_soup = soup.select('table.area li')
-                    for li in css_soup:
-                        liid=''
-                        liid = li.input['id']
-                        link_txt=''
-                        link_txt= li.a.string
-                        print('--')
-                        print(link_txt)
 #                    handle = csv.writer(csvfile, delimiter=',',
 #                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
-#                    handle.writerow(css_soup)
+                    handle = csv.DictWriter(csvfile, ['id','title','count'])
+                    handle.writeheader()
+                    for li in css_soup:
+                        row = {}
+                        m=None
+                        row['id'] = li.input['id']
+                        if li.a == None:
+                            row['title'] = li.span.string.split('(')[0]
+                            m = re.search(r'[0-9]+', li.span.string.split('(')[1])
+                            row['count'] = m.group(0)
+                        else:
+                            row['title'] = li.a.string.split('(')[0]
+                            m = re.search(r'[0-9]+', li.a.string.split('(')[1])
+                            row['count'] = m.group(0)
+#                        print(row)
+                        handle.writerow(row)
 
 
 #                print(css_soup)
