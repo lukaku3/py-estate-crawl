@@ -81,12 +81,13 @@ class Crawling(unittest.TestCase):
                             #self.driver.send_keys(Keys.PAGE_DOWN)
                             #self.driver.execute_script("window.scrollTo(0, 630)")
                             #self.scroll_to_target_element('#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(1) > th > p > span')
-                            #self.select_100()
                             element1 = WebDriverWait(self.driver, 15).until(
                                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # till clickable search_btn
                             soup = BeautifulSoup(self.driver.page_source, "lxml")
-                            css_soup = soup.select('#cont > table > tbody > tr:nth-child(1) > th > h5 > a')
-                            print(css_soup)
+                            for tag in soup.find_all(re.compile("h5")):
+                                #print('{},{}'.format(tag.a.text,tag.a.get("href")))
+                                pass
+                            self.go_next_page()
                             sys.exit() 
                             time.sleep(10)
                         if ( cnt == 6 ):
@@ -104,8 +105,25 @@ class Crawling(unittest.TestCase):
     def scrollByY(self, height):
         self.driver.execute_script("window.scrollTo(0, " + str(height) + ");")
 
-    def select_100(self):
-        Select(self.driver.find_element_by_css_selector(self.next_css_select)).select_by_value('100')
+    def go_next_page(self):
+        pg = self.get_curr_pg_num() + 1
+        elem = self.driver.find_elements_by_link_text( pg )
+        elem.click()
+
+    def chk_curr_pg(self):
+        curr_pg = self.get_curr_pg_num() if self.get_curr_pg_num() != None else 0
+        print('curr_pg:{}'.format(curr_pg))
+        #Select(self.driver.find_element_by_css_selector(self.next_css_select)).select_by_value('100')
+
+    def get_curr_pg_num(self):
+        curr = self.driver.current_url
+        for p in curr.split('&'):
+            m = re.search(r'^p=[0-9]+$', p)
+            if m == None:
+                pass
+            else:
+                return int(re.search(r'[0-9]+', m.group(0)).group(0))
+        return 1
 
     def test_main(self):
         self.driver.get("https://www.google.co.jp")
