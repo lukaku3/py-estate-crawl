@@ -15,11 +15,13 @@ class Crawling(unittest.TestCase):
     buy_type = {'31':"マンション","32":"一戸建て、その他","33":"事業用物件"}
     next_css_select = "#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(2) > td:nth-child(1) > p > select"
     title_link_selector = 'table.result_all_part > tbody > tr > th > h5 > a'
+    nx = '#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(1) > td > p > a:nth-child({})'
 
     def setUp(self):
-        #self.driver = webdriver.Chrome()
-        self.driver = webdriver.Chrome(executable_path=os.path.abspath("chromedriver"))
-#        self.driver.set_window_size(1024, 1024)
+        self.driver = webdriver.Chrome()
+        #self.driver = webdriver.Chrome(executable_path=os.path.abspath("chromedriver"))
+        #self.driver.set_window_size(1024, 768)
+        self.driver.set_window_size(1024, 900)
         self.driver.implicitly_wait(10)
 
     def test_get_city(self):
@@ -85,11 +87,10 @@ class Crawling(unittest.TestCase):
                                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # till clickable search_btn
                             soup = BeautifulSoup(self.driver.page_source, "lxml")
                             for tag in soup.find_all(re.compile("h5")):
-                                #print('{},{}'.format(tag.a.text,tag.a.get("href")))
-                                pass
+                                print('{},{}'.format(tag.a.text,tag.a.get("href")))
                             self.go_next_page()
-                            sys.exit() 
                             time.sleep(10)
+                            #sys.exit() 
                         if ( cnt == 6 ):
                             sys.exit() 
                         cnt = cnt +1
@@ -98,16 +99,20 @@ class Crawling(unittest.TestCase):
         print(css_selector)
         element = self.driver.find_element_by_css_selector(css_selector)
         print(element.location_once_scrolled_into_view['y'])
-        #self.driver.execute_script("window.scrollTo(0, {})".format(element.location_once_scrolled_into_view['y']))
-        self.driver.execute_script("window.scrollTo(0, 630)")
+        self.driver.execute_script("window.scrollTo(0, {})".format(element.location_once_scrolled_into_view['y']))
+        #self.driver.execute_script("window.scrollTo(0, 630)")
         #self.scrollByY(element.location_once_scrolled_into_view['y'])
 
     def scrollByY(self, height):
         self.driver.execute_script("window.scrollTo(0, " + str(height) + ");")
 
     def go_next_page(self):
-        pg = self.get_curr_pg_num() + 1
-        elem = self.driver.find_elements_by_link_text( pg )
+        pg = int(self.get_curr_pg_num())
+        print( pg )
+#        elem = self.driver.find_elements_by_link_text( pg )
+        self.scroll_to_target_element(self.nx.format(pg))
+        elem = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, self.nx.format(pg)))) 
         elem.click()
 
     def chk_curr_pg(self):
