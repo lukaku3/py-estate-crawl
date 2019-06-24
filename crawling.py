@@ -16,6 +16,8 @@ class Crawling(unittest.TestCase):
     next_css_select = "#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(2) > td:nth-child(1) > p > select"
     title_link_selector = 'table.result_all_part > tbody > tr > th > h5 > a'
     select_list_title = '#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(2) > td:nth-child(1) > p > span'
+    select_list = 'select[name="select"]'
+    select_num = '100'
     nx = '#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(1) > td > p > a:nth-child({})'
 
     def setUp(self):
@@ -76,14 +78,8 @@ class Crawling(unittest.TestCase):
                                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # click search_btn
                             element0.click()
                             # open thing list
-#                            self.change_list_num(select.select_list_title)
+                            self.change_list_num(self.select_list_title, self.select_num)
                             self.get_thing_link()
-#                            soup = BeautifulSoup(self.driver.page_source, "lxml")
-#                            for tag in soup.find_all(re.compile("h5")):
-#                                print('{},{}'.format(tag.a.text,tag.a.get("href")))
-#                            self.go_next_page()
-#                            time.sleep(10)
-                            #sys.exit() 
                         if ( cnt == 6 ):
                             sys.exit() 
                         cnt = cnt +1
@@ -96,12 +92,15 @@ class Crawling(unittest.TestCase):
                 soup = BeautifulSoup(self.driver.page_source, "lxml")
                 for tag in soup.find_all(re.compile("h5")):
                     print('{},{}'.format(tag.a.text,tag.a.get("href")))
+                break # debug here
                 self.go_next_page()
         except:
             pass
 
-    def change_list_num(self, css_selector):
-        pass
+    def change_list_num(self, css_selector, num):
+        self.scroll_to_target_element(css_selector)
+        css_selector = 'select[name="select"]'
+        Select(self.driver.find_element_by_css_selector(css_selector)).select_by_value(self.select_num)
 
     def scroll_to_target_element(self, css_selector):
         print(css_selector)
