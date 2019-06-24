@@ -15,6 +15,7 @@ class Crawling(unittest.TestCase):
     buy_type = {'31':"マンション","32":"一戸建て、その他","33":"事業用物件"}
     next_css_select = "#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(2) > td:nth-child(1) > p > select"
     title_link_selector = 'table.result_all_part > tbody > tr > th > h5 > a'
+    select_list_title = '#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(2) > td:nth-child(1) > p > span'
     nx = '#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(1) > td > p > a:nth-child({})'
 
     def setUp(self):
@@ -71,45 +72,47 @@ class Crawling(unittest.TestCase):
                         if ( int(list[2]) > 0):
                             self.driver.find_element_by_id(list[0]).click() # click city
                         if (cnt > 1 and (cnt % 5) == 0):
-#                            self.driver.find_element_by_css_selector('div.bottom-button.width-s > a').click() # click search_btn
                             element0 = WebDriverWait(self.driver, 15).until(
                                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # click search_btn
                             element0.click()
                             # open thing list
-                            #element1 = WebDriverWait(self.driver, 10).until(
-                            #    EC.element_to_be_clickable((By.CSS_SELECTOR, 'th[colspan="4"] > h5 > a'))) # click thing title
-                            #element1.click()
-                            #print(self.driver.title)
-                            #self.driver.send_keys(Keys.PAGE_DOWN)
-                            #self.driver.execute_script("window.scrollTo(0, 630)")
-                            #self.scroll_to_target_element('#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(1) > th > p > span')
-                            element1 = WebDriverWait(self.driver, 15).until(
-                                EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # till clickable search_btn
-                            soup = BeautifulSoup(self.driver.page_source, "lxml")
-                            for tag in soup.find_all(re.compile("h5")):
-                                print('{},{}'.format(tag.a.text,tag.a.get("href")))
-                            self.go_next_page()
-                            time.sleep(10)
+#                            self.change_list_num(select.select_list_title)
+                            self.get_thing_link()
+#                            soup = BeautifulSoup(self.driver.page_source, "lxml")
+#                            for tag in soup.find_all(re.compile("h5")):
+#                                print('{},{}'.format(tag.a.text,tag.a.get("href")))
+#                            self.go_next_page()
+#                            time.sleep(10)
                             #sys.exit() 
                         if ( cnt == 6 ):
                             sys.exit() 
                         cnt = cnt +1
 
+    def get_thing_link(self):
+        try:
+            while True:
+                elem = WebDriverWait(self.driver, 15).until(
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # wait for clickable search_btn
+                soup = BeautifulSoup(self.driver.page_source, "lxml")
+                for tag in soup.find_all(re.compile("h5")):
+                    print('{},{}'.format(tag.a.text,tag.a.get("href")))
+                self.go_next_page()
+        except:
+            pass
+
+    def change_list_num(self, css_selector):
+        pass
+
     def scroll_to_target_element(self, css_selector):
         print(css_selector)
         element = self.driver.find_element_by_css_selector(css_selector)
-        print(element.location_once_scrolled_into_view['y'])
         self.driver.execute_script("window.scrollTo(0, {})".format(element.location_once_scrolled_into_view['y']))
-        #self.driver.execute_script("window.scrollTo(0, 630)")
-        #self.scrollByY(element.location_once_scrolled_into_view['y'])
 
-    def scrollByY(self, height):
-        self.driver.execute_script("window.scrollTo(0, " + str(height) + ");")
-
+#    def scrollByY(self, height):
+#        self.driver.execute_script("window.scrollTo(0, " + str(height) + ");")
+#
     def go_next_page(self):
         pg = int(self.get_curr_pg_num())
-        print( pg )
-#        elem = self.driver.find_elements_by_link_text( pg )
         self.scroll_to_target_element(self.nx.format(pg))
         elem = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, self.nx.format(pg)))) 
@@ -118,7 +121,6 @@ class Crawling(unittest.TestCase):
     def chk_curr_pg(self):
         curr_pg = self.get_curr_pg_num() if self.get_curr_pg_num() != None else 0
         print('curr_pg:{}'.format(curr_pg))
-        #Select(self.driver.find_element_by_css_selector(self.next_css_select)).select_by_value('100')
 
     def get_curr_pg_num(self):
         curr = self.driver.current_url
