@@ -63,7 +63,7 @@ class Crawling(unittest.TestCase):
 #                time.sleep(3)
 #
                 #with open("./csvfiles/type-{}_pref-{}.csv".format(type,pref), newline='') as csvfile:
-                with open("./csvfiles/type-{}_pref-{}.csv".format(type,pref), 'r') as csvfile:
+                with open("./csvfiles/type-{}_pref-{}.csv".format(type,pref), 'r') as csvfile: # open city list
                     reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
                     header = next(reader)
                     cnt=1
@@ -77,7 +77,7 @@ class Crawling(unittest.TestCase):
                             element0 = WebDriverWait(self.driver, 15).until(
                                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # click search_btn
                             element0.click()
-                            # open thing list
+                            # open page: thing list
                             self.change_list_num(self.select_list_title, self.select_num)
                             self.get_thing_link()
                         if ( cnt == 6 ):
@@ -86,15 +86,16 @@ class Crawling(unittest.TestCase):
 
     def get_thing_link(self):
         try:
-            while True:
-                elem = WebDriverWait(self.driver, 15).until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # wait for clickable search_btn
-                soup = BeautifulSoup(self.driver.page_source, "lxml")
-                for tag in soup.find_all(re.compile("h5")):
-                    print('{},{}'.format(tag.a.text,tag.a.get("href")))
-                break # debug here
-                self.go_next_page()
+            with open("./csvfiles/detail-{}_pref-{}.csv".format(type,pref), 'w', newline='') as csvfile:
+                while True:
+                    elem = WebDriverWait(self.driver, 15).until(
+                        EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # wait for clickable search_btn
+                    soup = BeautifulSoup(self.driver.page_source, "lxml")
+                    for tag in soup.find_all(re.compile("h5")):
+                        print('{},{}'.format(tag.a.text,tag.a.get("href")))
+                    self.go_next_page()
         except:
+            csvfile.close()
             pass
 
     def change_list_num(self, css_selector, num):
