@@ -18,6 +18,7 @@ class Crawling(unittest.TestCase):
     select_list_title = '#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(2) > td:nth-child(1) > p > span'
     select_list = 'select[name="select"]'
     select_num = '100'
+    search_result_title = '#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(1) > th > p > span'
     nx = '#cont > table:nth-child(12) > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(1) > td > p > a:nth-child({})'
 
     def setUp(self):
@@ -77,22 +78,24 @@ class Crawling(unittest.TestCase):
                             element0 = WebDriverWait(self.driver, 15).until(
                                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # click search_btn
                             element0.click()
+                            time.sleep(3)
                             # open page: thing list
                             self.change_list_num(self.select_list_title, self.select_num)
-                            self.get_thing_link()
-                        if ( cnt == 6 ):
-                            sys.exit() 
+                            self.get_thing_link(type,pref) # correct thing
+                            # reset
+                            self.driver.get( self.base_url.format(type,pref,'l') )
                         cnt = cnt +1
 
-    def get_thing_link(self):
+    def get_thing_link(self, type, pref):
         try:
             with open("./csvfiles/detail-{}_pref-{}.csv".format(type,pref), 'w', newline='') as csvfile:
                 while True:
                     elem = WebDriverWait(self.driver, 15).until(
                         EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # wait for clickable search_btn
                     soup = BeautifulSoup(self.driver.page_source, "lxml")
-                    for tag in soup.find_all(re.compile("h5")):
-                        print('{},{}'.format(tag.a.text,tag.a.get("href")))
+                    #for tag in soup.find_all(re.compile("h5")):
+                    #    print('{},{}'.format(tag.a.text,tag.a.get("href")))
+                    time.sleep(1)
                     self.go_next_page()
         except:
             csvfile.close()
@@ -106,13 +109,17 @@ class Crawling(unittest.TestCase):
     def scroll_to_target_element(self, css_selector):
         print(css_selector)
         element = self.driver.find_element_by_css_selector(css_selector)
+        print(element.location_once_scrolled_into_view)
         self.driver.execute_script("window.scrollTo(0, {})".format(element.location_once_scrolled_into_view['y']))
+#        self.driver.execute_script("window.scrollTo(0, {})".format(600))
 
 #    def scrollByY(self, height):
 #        self.driver.execute_script("window.scrollTo(0, " + str(height) + ");")
-#
+
     def go_next_page(self):
+        self.scroll_to_target_element(self.title_link_selector)
         pg = int(self.get_curr_pg_num())
+        print("page:" + pg)
         self.scroll_to_target_element(self.nx.format(pg))
         elem = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, self.nx.format(pg)))) 
@@ -134,7 +141,6 @@ class Crawling(unittest.TestCase):
 
     def test_main(self):
         self.driver.get("https://www.google.co.jp")
-
 
         self.driver.close()
 
