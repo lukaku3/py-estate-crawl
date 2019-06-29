@@ -1,4 +1,4 @@
-import csv,os,re,sys,time,unittest
+import csv,os,re,sys,time,unittest,urllib
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -88,16 +88,20 @@ class Crawling(unittest.TestCase):
 
     def get_thing_link(self, type, pref):
         try:
-            with open("./csvfiles/detail-{}_pref-{}.csv".format(type,pref), 'w', newline='') as csvfile:
+            with open("./csvfiles/detail-{}_pref-{}.csv".format(type,pref), 'w') as csvfile:
+                writer = csv.writer(csvfile, lineterminator='\n')
                 while True:
                     elem = WebDriverWait(self.driver, 15).until(
                         EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # wait for clickable search_btn
                     soup = BeautifulSoup(self.driver.page_source, "lxml")
-                    #for tag in soup.find_all(re.compile("h5")):
-                    #    print('{},{}'.format(tag.a.text,tag.a.get("href")))
-                    time.sleep(1)
+                    for tag in soup.find_all(re.compile("h5")):
+                        print('{},{}'.format(tag.a.text,tag.a.get("href")))
+                        writer.writerow('{},{}'.format(tag.a.text,tag.a.get("href")))
                     self.go_next_page()
-        except:
+                    time.sleep(1)
+        except OSError as err:
+            driver.save_screenshot('screenshots/paginate_err.png')
+            print("OS error: {0}".format(err))
             csvfile.close()
             pass
 
@@ -117,13 +121,10 @@ class Crawling(unittest.TestCase):
 #        self.driver.execute_script("window.scrollTo(0, " + str(height) + ");")
 
     def go_next_page(self):
-        self.scroll_to_target_element(self.title_link_selector)
-        pg = int(self.get_curr_pg_num())
-        print("page:" + pg)
-        self.scroll_to_target_element(self.nx.format(pg))
-        elem = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, self.nx.format(pg)))) 
-        elem.click()
+        self.scroll_to_target_element('h4.title_home_all')
+        pg = self.get_curr_pg_num()
+        print('page:{}'.format(pg))
+        self.driver.find_element_by_link_text('次へ＞').click()
 
     def chk_curr_pg(self):
         curr_pg = self.get_curr_pg_num() if self.get_curr_pg_num() != None else 0
