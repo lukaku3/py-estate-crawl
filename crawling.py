@@ -59,51 +59,55 @@ class Crawling(unittest.TestCase):
             for pref in self.pref_cd:
                 print( self.base_url.format(type,pref,'l') )
                 self.driver.get( self.base_url.format(type,pref,'l') )
-#                with open("./csvfiles/type-{}_pref-{}.csv".format(type,pref), newline='') as csvfile:
-#                reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
-#                time.sleep(3)
-#
-                #with open("./csvfiles/type-{}_pref-{}.csv".format(type,pref), newline='') as csvfile:
+
                 with open("./csvfiles/type-{}_pref-{}.csv".format(type,pref), 'r') as csvfile: # open city list
                     reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
                     header = next(reader)
                     cnt=1
-                    for row in reader: # read csv
-                        print(cnt)
-                        list=row[0].split(',')
-                        print(list[0])
-                        if ( int(list[2]) > 0):
-                            self.driver.find_element_by_id(list[0]).click() # click city
-                        if (cnt > 1 and (cnt % 5) == 0):
-                            element0 = WebDriverWait(self.driver, 15).until(
-                                EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # click search_btn
-                            element0.click()
-                            time.sleep(3)
-                            # open page: thing list
-                            self.change_list_num(self.select_list_title, self.select_num)
-                            self.get_thing_link(type,pref) # correct thing
-                            # reset
-                            self.driver.get( self.base_url.format(type,pref,'l') )
-                        cnt = cnt +1
+                    try:
+                        for row in reader: # read csv
+                            print(cnt)
+                            list=row[0].split(',')
+                            print(list[0])
+                            if ( int(list[2]) > 0):
+                                self.driver.find_element_by_id(list[0]).click() # click city
+                            if (cnt > 1 and (cnt % 5) == 0):
+                                element0 = WebDriverWait(self.driver, 15).until(
+                                    EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # click search_btn
+                                element0.click()
+                                time.sleep(3)
+                                # open page: thing list
+                                self.change_list_num(self.select_list_title, self.select_num)
+                                try:
+                                    self.get_thing_link(type,pref) # correct thing
+                                except:
+                                    # reset
+                                    self.driver.get( self.base_url.format(type,pref,'l') )
+                            cnt = cnt +1
+                    except csv.Error as e:
+                        print( self.base_url.format(type,pref,'l') )
+                        print(e)
+                        pass
+                    except OSError as err:
+                        print("OS error: {0}".format(err))                        
 
     def get_thing_link(self, type, pref):
-        try:
-            with open("./csvfiles/detail-{}_pref-{}.csv".format(type,pref), 'w') as csvfile:
-                writer = csv.writer(csvfile, lineterminator='\n')
-                while True:
-                    elem = WebDriverWait(self.driver, 15).until(
-                        EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # wait for clickable search_btn
-                    soup = BeautifulSoup(self.driver.page_source, "lxml")
-                    for tag in soup.find_all(re.compile("h5")):
-                        print('{},{}'.format(tag.a.text,tag.a.get("href")))
-                        writer.writerow('{},{}'.format(tag.a.text,tag.a.get("href")))
-                    self.go_next_page()
-                    time.sleep(1)
-        except OSError as err:
-            driver.save_screenshot('screenshots/paginate_err.png')
-            print("OS error: {0}".format(err))
-            csvfile.close()
-            pass
+        with open("./csvfiles/detail-{}_pref-{}.csv".format(type,pref), 'w') as csvfile:
+            #writer = csv.writer(csvfile, lineterminator='\n')
+            handle = csv.DictWriter(csvfile, ['title','url'])
+            handle.writeheader()
+            while True:
+                elem = WebDriverWait(self.driver, 15).until(
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # wait for clickable search_btn
+                soup = BeautifulSoup(self.driver.page_source, "lxml")
+                for tag in soup.find_all(re.compile("h5")):
+                    row = {}
+                    row['title'] = tag.a.text
+                    row['url']   = tag.a.get('href')
+                    print('{},{}'.format(tag.a.text,tag.a.get("href")))
+                    handle.writerow(row)
+                self.go_next_page()
+                time.sleep(1)
 
     def change_list_num(self, css_selector, num):
         self.scroll_to_target_element(css_selector)
