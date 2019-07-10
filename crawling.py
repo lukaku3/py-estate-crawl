@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.options import Options
 
 class Crawling(unittest.TestCase):
     
+    root_url = 'http://www.fudousan.or.jp/system/{}'
     base_url = "http://www.fudousan.or.jp/system/?act=f&type={}&pref={}&stype={}"
     pref_cd = {'13':'東京','11':'埼玉','12':'千葉','14':'神奈川','27':'大阪'}
     buy_type = {'31':"マンション","32":"一戸建て、その他","33":"事業用物件"}
@@ -54,6 +55,15 @@ class Crawling(unittest.TestCase):
                         handle.writerow(row)
         self.driver.close()
 
+    def test_abc(self):
+        for type in self.buy_type:
+            for pref in self.pref_cd:
+                print( self.base_url.format(type,pref,'l') )
+                self.driver.get( self.base_url.format(type,pref,'l') )
+                time.sleep(1)
+                self.scroll_to_target_element('h4.title_area')
+                time.sleep(13)
+
     def test_get_list(self):
         for type in self.buy_type:
             for pref in self.pref_cd:
@@ -75,7 +85,7 @@ class Crawling(unittest.TestCase):
                                 element0 = WebDriverWait(self.driver, 15).until(
                                     EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.bottom-button.width-s > a'))) # click search_btn
                                 element0.click()
-                                time.sleep(3)
+                                time.sleep(1)
                                 # open page: thing list
                                 self.change_list_num(self.select_list_title, self.select_num)
                                 try:
@@ -83,6 +93,7 @@ class Crawling(unittest.TestCase):
                                 except:
                                     # reset
                                     self.driver.get( self.base_url.format(type,pref,'l') )
+                                    self.scroll_to_target_element('h4.title_area')
                             cnt = cnt +1
                     except csv.Error as e:
                         print( self.base_url.format(type,pref,'l') )
@@ -91,8 +102,24 @@ class Crawling(unittest.TestCase):
                     except OSError as err:
                         print("OS error: {0}".format(err))                        
 
+    def test_get_detail(self):
+        for type in self.buy_type:
+            for pref in self.pref_cd:
+                with open("./csvfiles/detail-{}_pref-{}.csv".format(type,pref), 'r') as csvfile:
+                    reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+                    next(reader)
+                    for row in reader: # read csv
+                        print(row[1])
+                        self.driver.get( self.root_url.format(row[1]) )
+                        elem = WebDriverWait(self.driver, 15).until(
+                            EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.function-button'))) # wait for clickable link
+                        soup = BeautifulSoup(self.driver.page_source, "lxml")
+                        print(soup)
+                        time.sleep(3)
+
+
     def get_thing_link(self, type, pref):
-        with open("./csvfiles/detail-{}_pref-{}.csv".format(type,pref), 'w') as csvfile:
+        with open("./csvfiles/detail-{}_pref-{}.csv".format(type,pref), 'a') as csvfile:
             #writer = csv.writer(csvfile, lineterminator='\n')
             handle = csv.DictWriter(csvfile, ['title','url'])
             handle.writeheader()
