@@ -103,18 +103,32 @@ class Crawling(unittest.TestCase):
                         print("OS error: {0}".format(err))                        
 
     def test_get_detail(self):
+        import re
         for type in self.buy_type:
             for pref in self.pref_cd:
                 with open("./csvfiles/detail-{}_pref-{}.csv".format(type,pref), 'r') as csvfile:
                     reader = csv.reader(csvfile, delimiter=',', quotechar='|')
                     next(reader)
                     for row in reader: # read csv
+                        detail = {}
+                        head_title=''
                         print(row[1])
                         self.driver.get( self.root_url.format(row[1]) )
                         elem = WebDriverWait(self.driver, 15).until(
                             EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.function-button'))) # wait for clickable link
                         soup = BeautifulSoup(self.driver.page_source, "lxml")
-                        print(soup)
+                        elem = self.driver.find_element_by_css_selector( "div.content-title-text")
+                        detail['title'] = elem.text.split('／')[0]
+                        detail['bno'] = self.driver.find_element_by_css_selector("td.midashi.bid-text p").text.split('／')[0].split(':')[1]
+                        detail['bno_sub'] = self.driver.find_element_by_css_selector("td.midashi.bid-text p").text.split('／')[1].split(':')[1]
+                        detail['price'] = self.driver.find_element_by_css_selector("span.syousai_price").text.split(' ')[2]
+                        detail['access'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(3) > td > p").text
+                        detail['subcommission'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(4) > td:nth-child(2) > p").text
+                        #detail['address'] = soup.find_all("div", class_="content-title-text").split('/')[1]
+                        #detail['train_access'] = soup.find_all("div", class_="content-title-text").split('/')[2]
+                        #print(elem.text.split('／'))
+                        #print(elem.text)
+                        print(detail)
                         time.sleep(3)
 
 
