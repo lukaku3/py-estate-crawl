@@ -109,27 +109,69 @@ class Crawling(unittest.TestCase):
                 with open("./csvfiles/detail-{}_pref-{}.csv".format(type,pref), 'r') as csvfile:
                     reader = csv.reader(csvfile, delimiter=',', quotechar='|')
                     next(reader)
-                    for row in reader: # read csv
-                        detail = {}
-                        head_title=''
-                        print(row[1])
-                        self.driver.get( self.root_url.format(row[1]) )
-                        elem = WebDriverWait(self.driver, 15).until(
-                            EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.function-button'))) # wait for clickable link
-                        soup = BeautifulSoup(self.driver.page_source, "lxml")
-                        elem = self.driver.find_element_by_css_selector( "div.content-title-text")
-                        detail['title'] = elem.text.split('／')[0]
-                        detail['bno'] = self.driver.find_element_by_css_selector("td.midashi.bid-text p").text.split('／')[0].split(':')[1]
-                        detail['bno_sub'] = self.driver.find_element_by_css_selector("td.midashi.bid-text p").text.split('／')[1].split(':')[1]
-                        detail['price'] = self.driver.find_element_by_css_selector("span.syousai_price").text.split(' ')[2]
-                        detail['access'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(3) > td > p").text
-                        detail['subcommission'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(4) > td:nth-child(2) > p").text
-                        #detail['address'] = soup.find_all("div", class_="content-title-text").split('/')[1]
-                        #detail['train_access'] = soup.find_all("div", class_="content-title-text").split('/')[2]
-                        #print(elem.text.split('／'))
-                        #print(elem.text)
-                        print(detail)
-                        time.sleep(3)
+                    with open("./csvfiles/detail_data-{}_pref-{}.csv".format(type,pref), 'a') as writer:
+                        cnt = 0
+                        for row in reader: # read csv
+                            detail = {}
+                            head_title=''
+                            print(row[1])
+                            self.driver.get( self.root_url.format(row[1]) )
+                            elem = WebDriverWait(self.driver, 15).until(
+                                EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.function-button'))) # wait for clickable link
+                            soup = BeautifulSoup(self.driver.page_source, "lxml")
+                            elem = self.driver.find_element_by_css_selector( "div.content-title-text")
+                            detail['title'] = elem.text.split('／')[0]
+                            detail['address'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(2) > td > p > span").text
+                            detail['map_url'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(2) > td > p > a").get_attribute("href")
+                            detail['bno'] = self.driver.find_element_by_css_selector("td.midashi.bid-text p").text.split('／')[0].split(':')[1]
+                            detail['bno_sub'] = self.driver.find_element_by_css_selector("td.midashi.bid-text p").text.split('／')[1].split(':')[1]
+                            detail['price'] = self.driver.find_element_by_css_selector("span.syousai_price").text.split(' ')[2]
+                            detail['access'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(3) > td > p").text
+                            detail['subcommission'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(4) > td:nth-child(2) > p").text
+                            detail['sikikin'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(4) > td:nth-child(4) > p").text
+                            detail['release_notice'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(5) > td:nth-child(2) > p").text
+                            detail['hoshokin'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(5) > td:nth-child(4) > p").text
+                            detail['built_type'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(6) > td:nth-child(2) > p").text
+                            detail['madori'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(7) > td:nth-child(2) > p").text
+                            detail['madori_detail'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(8) > td:nth-child(2) > p").text
+                            detail['floor_area'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(9) > td:nth-child(2) > p").text
+                            detail['built_ym'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(9) > td:nth-child(4) > p").text
+                            detail['structure'] = self.driver.find_element_by_css_selector("#info-table-1 > tbody > tr:nth-child(9) > td:nth-child(2) > p").text
+                            detail['floors'] = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(2) > td:nth-child(2) > p").text
+                            detail['direction'] = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(2) > td:nth-child(2) > p").text
+                            detail['balcony_area'] = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(2) > td:nth-child(2) > p").text
+                            detail['parking']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(2) > td:nth-child(2) > p").text
+
+                            detail['facility']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(4) > td > p").text
+                            detail['summary']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(5) > td > p").text
+                            detail['status']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(6) > td > p").text
+                            detail['entry']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(6) > td:nth-child(4) > p").text
+                            detail['contract_period']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(7) > td > p").text
+                            detail['fixed_term_lease_contract']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(7) > td:nth-child(4) > p").text
+                            detail['insurance']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(8) > td > p").text
+                            detail['recontract_fee']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(8) > td > p").text
+                            detail['Amortization']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(9) > td:nth-child(4) > p").text
+                            detail['etc_fee']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(10) > td:nth-child(2) > p").text
+                            detail['zatsu']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(11) > td:nth-child(2) > p").text
+                            detail['memo1']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(12) > td:nth-child(2) > p").text
+                            detail['memo2']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(13) > td:nth-child(2) > p").text
+                            detail['caution_memo']  = self.driver.find_element_by_css_selector("#info-table-2 > tbody > tr:nth-child(14) > td:nth-child(2) > p").text
+                            detail['transaction_form']  = self.driver.find_element_by_css_selector("#info-table-5 > tbody > tr:nth-child(1) > td.qrctd > p").text
+                            detail['registed_date']  = self.driver.find_element_by_css_selector("#info-table-5 > tbody > tr:nth-child(2) > td > p").text
+                            detail['next_update_date']  = self.driver.find_element_by_css_selector("#info-table-5 > tbody > tr:nth-child(3) > td > p").text
+                            detail['detail_url']  = self.driver.find_element_by_css_selector("#info-table-5 > tbody > tr:nth-child(3) > td > p").text
+                            detail['estate_url']  = self.driver.find_element_by_css_selector("#info-table-5 > tbody > tr:nth-child(4) > td > p").text
+                            detail['qr_code']  = self.driver.find_element_by_css_selector("#propertyQrcode > img").get_attribute("src")
+                            detail['information_provider']  = self.driver.find_element_by_css_selector("#companyinfo > div > div > table > tbody > tr:nth-child(1) > td:nth-child(2) > b > a").text
+                            detail['information_provider_url']  = self.driver.find_element_by_css_selector("#companyinfo > div > div > table > tbody > tr:nth-child(1) > td:nth-child(2) > b > a").get_attribute("href")
+                            detail['information_provider_id']  = self.driver.find_element_by_css_selector("#companyinfo > div > div > table > tbody > tr:nth-child(1) > td:nth-child(3)").text
+                            detail['information_provider_detail']  = self.driver.find_element_by_css_selector("#companyinfo > div > div > table > tbody > tr:nth-child(2) > td:nth-child(1)").text
+                            if ( cnt == 0 ):
+                                handle = csv.DictWriter(writer, detail.keys())
+                                handle.writeheader()
+                            handle.writerow(detail)
+                            cnt = cnt + 1
+                            time.sleep(3)
 
 
     def get_thing_link(self, type, pref):
